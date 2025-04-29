@@ -300,6 +300,20 @@ def load_artifacts():
         print(f"Error: {e}. Run the app to generate model and encoder files.")
         exit(1)
 
+# Preprocess data and train model
+deliveries_2nd, data, team_classes, venue_classes, toss_classes = preprocess_data(matches, deliveries)
+X = data[[
+    'batting_team', 'bowling_team', 'runs_at_over', 'wickets_at_over', 'remaining_wickets',
+    'current_rr', 'required_rr', 'batting_team_win_ratio', 'bowling_team_win_ratio',
+    'batting_team_recent_win_ratio', 'bowling_team_recent_win_ratio',
+    'is_home_match', 'home_win_rate', 'venue', 'venue_avg_runs', 'toss_decision', 'target_difficulty'
+]]
+y = data['target']
+model = train_model(X, y)
+# Test predictions
+model, le_team, le_venue, le_toss = load_artifacts()
+test_predictions(model, data, le_team, le_venue, le_toss)
+
 # Flask routes
 @app.route('/')
 def home():
@@ -450,17 +464,6 @@ def predict():
                                form_data=form_data)
 
 if __name__ == '__main__':
-    # Preprocess data and train model
-    deliveries_2nd, data, team_classes, venue_classes, toss_classes = preprocess_data(matches, deliveries)
-    X = data[[
-        'batting_team', 'bowling_team', 'runs_at_over', 'wickets_at_over', 'remaining_wickets',
-        'current_rr', 'required_rr', 'batting_team_win_ratio', 'bowling_team_win_ratio',
-        'batting_team_recent_win_ratio', 'bowling_team_recent_win_ratio',
-        'is_home_match', 'home_win_rate', 'venue', 'venue_avg_runs', 'toss_decision', 'target_difficulty'
-    ]]
-    y = data['target']
-    model = train_model(X, y)
-    # Test predictions
-    model, le_team, le_venue, le_toss = load_artifacts()
-    test_predictions(model, data, le_team, le_venue, le_toss)
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
