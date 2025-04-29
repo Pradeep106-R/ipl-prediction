@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Match Winner Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: url('{{ url_for("static", filename="images/cricket-bg.jpg") }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #333;
+        }
+        .content {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Full width of body */
+            box-sizing: border-box;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            width: 100%; /* Full width of content */
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input[type="number"] {
+            width: 100%; /* Full width of form-group */
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+        }
+        select:hover, input[type="number"]:hover {
+            border-color: #00CED1; /* Vibrant teal on hover */
+            background-color: rgba(0, 206, 209, 0.05);
+            box-shadow: 0 4px 8px rgba(0, 206, 209, 0.2);
+        }
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .error, .prediction {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Match form-group width */
+        }
+        .error {
+            color: red;
+            border-color: red;
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+        .prediction {
+            color: green;
+            border-color: green;
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>IPL Match Winner Prediction</h1>
+        <form action="/predict" method="POST" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="batting_team">Batting Team:</label>
+                <select name="batting_team" id="batting_team" required>
+                    <option value="" disabled selected>Select Batting Team</option>
+                    {% for team in teams %}
+                    <option value="{{ team }}" {% if form_data.batting_team == team %}selected{% endif %}>{{ team }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="bowling_team">Bowling Team:</label>
+                <select name="bowling_team" id="bowling_team" required>
+                    <option value="" disabled selected>Select Bowling Team</option>
+                    {% for team in teams %}
+                    <option value="{{ team }}" {% if form_data.bowling_team == team %}selected{% endif %}>{{ team }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="venue">Venue:</label>
+                <select name="venue" id="venue" required>
+                    <option value="" disabled selected>Select Venue</option>
+                    {% for venue in venues %}
+                    <option value="{{ venue }}" {% if form_data.venue == venue %}selected{% endif %}>{{ venue }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="toss_decision">Toss Decision:</label>
+                <select name="toss_decision" id="toss_decision" required>
+                    <option value="" disabled selected>Select Toss Decision</option>
+                    {% for toss in toss_decisions %}
+                    <option value="{{ toss }}" {% if form_data.toss_decision == toss %}selected{% endif %}>{{ toss }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="overs">Overs Completed:</label>
+                <input type="number" name="overs" id="overs" step="0.1" min="0" max="20" value="{{ form_data.overs|default('') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="runs_at_over">Runs Scored:</label>
+                <input type="number" name="runs_at_over" id="runs_at_over" min="0" value="{{ form_data.runs_at_over|default('') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="wickets_at_over">Wickets Lost:</label>
+                <input type="number" name="wickets_at_over" id="wickets_at_over" min="0" max="10" value="{{ form_data.wickets_at_over|default('') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="target_runs">Target Runs:</label>
+                <input type="number" name="target_runs" id="target_runs" min="1" value="{{ form_data.target_runs|default('') }}" required>
+            </div>
+
+            <button type="submit">Predict</button>
+        </form>
+
+        {% if prediction %}
+        <div class="{% if 'error' in prediction.lower() %}error{% else %}prediction{% endif %}">
+            {{ prediction }}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function validateForm() {
+            const battingTeam = document.getElementById('batting_team').value;
+            const bowlingTeam = document.getElementById('bowling_team').value;
+            const overs = parseFloat(document.getElementById('overs').value);
+            const runs = parseFloat(document.getElementById('runs_at_over').value);
+            const wickets = parseInt(document.getElementById('wickets_at_over').value);
+            const target = parseFloat(document.getElementById('target_runs').value);
+
+            if (battingTeam === bowlingTeam) {
+                alert("Batting and bowling teams cannot be the same.");
+                return false;
+            }
+            if (overs < 0 || overs > 20) {
+                alert("Overs must be between 0 and 20.");
+                return false;
+            }
+            if (wickets < 0 || wickets > 10) {
+                alert("Wickets must be between 0 and 10.");
+                return false;
+            }
+            if (runs < 0) {
+                alert("Runs scored cannot be negative.");
+                return false;
+            }
+            if (target <= runs) {
+                alert("Target runs must be greater than current runs.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
