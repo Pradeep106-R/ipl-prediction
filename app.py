@@ -187,7 +187,7 @@ def preprocess_data(matches, deliveries):
     home_wins = matches[matches.apply(lambda x: x['venue'] in home_venues.get(x['team1'], []) and x['winner'] == x['team1'], axis=1)]['winner'].value_counts()
     home_matches = matches[matches.apply(lambda x: x['venue'] in home_venues.get(x['team1'], []) or x['venue'] in home_venues.get(x['team2'], []), axis=1)]['team1'].value_counts()
     data['home_win_rate'] = data['batting_team'].map(
-        lazy lambda x: home_wins.get(x, 0) / home_matches.get(x, 1) if x in home_matches else 0
+        lambda x: home_wins.get(x, 0) / home_matches.get(x, 1) if x in home_matches else 0
     )
     venue_runs = deliveries[deliveries['inning'] == 1].groupby(['match_id', 'venue'])['total_runs'].sum().groupby('venue').mean().to_dict()
     data['venue_avg_runs'] = data['venue'].map(venue_runs).fillna(np.mean(list(venue_runs.values())))
